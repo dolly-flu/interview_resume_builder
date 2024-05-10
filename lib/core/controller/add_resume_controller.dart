@@ -81,8 +81,6 @@ class AddResumeController extends GetxController {
 
     print("thumbnailUrl----$thumbnailUrl");
     try {
-      // db.collection(Prefs.getUserID()).doc(AppConstant.assetsTbl).set({
-      // db.collection(AppConstant.resumeTbl).doc(AppConstant.resumeData).set({
       db.collection(AppConstant.resumeTbl).add({
         "profileImage": thumbnailUrl,
         "location": location,
@@ -101,8 +99,70 @@ class AddResumeController extends GetxController {
       });
       commonToast(AppConstant.addResumeSuccess);
       getResumeData();
-      // clear();
-      // Get.back();
+      clear();
+      Get.back();
+    } on FirebaseException catch (e) {
+      print("path----${e.message}");
+    }
+    Loader.hideLoader();
+  }
+
+  updateResumeToDataBase({
+    required String resumeKey,
+    required String location,
+    required String name,
+    required String profileImage,
+    required String email,
+    required String phoneNo,
+    required String skill,
+    required String designation,
+    required String duration,
+    required String companyName,
+    required String description,
+    required String qualification,
+    required String passingYear,
+    required String universityName,
+    required String educationDescription,
+  }) async {
+    Loader.showLoader();
+
+    final storageRef = FirebaseStorage.instance.ref();
+    Reference? imagesRef = storageRef.child(AppConstant.resumeResume).child("${AppConstant.resumeThumbnail}_$name");
+    print("thumbnail----$profileImage\n${profileImage.isURL}");
+    String thumbnailUrl;
+    if (!profileImage.isURL) {
+      try {
+        await imagesRef.putFile(File(profileImage));
+      } on FirebaseException catch (e) {
+        print("path----${e.message}");
+      }
+
+      print("imagesRef----${imagesRef.name}");
+      thumbnailUrl = await imagesRef.getDownloadURL();
+    } else {
+      thumbnailUrl = profileImage;
+    }
+    print("thumbnailUrl----$thumbnailUrl");
+    try {
+      db.collection(AppConstant.resumeTbl).doc(resumeKey).update({
+        "profileImage": thumbnailUrl,
+        "location": location,
+        "name": name,
+        "email": email,
+        "phoneNo": phoneNo,
+        "skill": skill,
+        "designation": designation,
+        "duration": duration,
+        "companyName": companyName,
+        "description": description,
+        "qualification": qualification,
+        "passingYear": passingYear,
+        "universityName": universityName,
+        "educationDescription": educationDescription,
+      });
+      commonToast(AppConstant.updateResumeSuccess);
+      Get.back();
+      getResumeData();
     } on FirebaseException catch (e) {
       print("path----${e.message}");
     }
@@ -111,18 +171,18 @@ class AddResumeController extends GetxController {
 
   getResumeData() async {
     Loader.showLoader();
-    resumeDataList.clear();
     await db.collection(AppConstant.resumeTbl).get().then(
       (querySnapshot) {
+        resumeDataList.clear();
         print("Successfully completed");
         print('response=================>::: ${querySnapshot.docs}');
         for (var docSnapshot in querySnapshot.docs) {
           print('-=-=================> ${docSnapshot.id} => ${jsonEncode(docSnapshot.data())}');
-          print('-=-=================> ---- ${jsonEncode(docSnapshot.data())}');
 
           Resume assets = Resume.fromJson(docSnapshot.data());
           print('------?${assets.name}');
           resumeDataList.add(Resume(
+            resumeKey: docSnapshot.id,
             location: assets.location,
             name: assets.name,
             profileImage: assets.profileImage,
@@ -146,6 +206,28 @@ class AddResumeController extends GetxController {
       onError: (e) => print("Error completing: $e"),
     );
     Loader.hideLoader();
+  }
+
+  deleteResumeFromData({
+    required String resumeKey,
+    required String name,
+  }) async {
+    print("resumeKey------>$resumeKey");
+    Loader.showLoader();
+
+    try {
+      final storageRef = FirebaseStorage.instance.ref();
+      Reference? imagesRef = storageRef.child(AppConstant.resumeResume).child("${AppConstant.resumeThumbnail}_$name");
+      await imagesRef.delete();
+
+      db.collection(AppConstant.resumeTbl).doc(resumeKey).delete();
+      commonToast(AppConstant.deletedResumeSuccess);
+      getResumeData();
+      Loader.hideLoader();
+    } on FirebaseException catch (e) {
+      print("path----${e.message}");
+      Loader.hideLoader();
+    }
   }
 
   clear() {

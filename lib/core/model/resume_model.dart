@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 class Resume {
+  String? resumeKey;
   String? location;
   String? name;
   String? profileImage;
@@ -19,6 +20,7 @@ class Resume {
   Resume(
       {this.location,
       this.name,
+      this.resumeKey,
       this.profileImage,
       this.email,
       this.phoneNo,
