@@ -1,6 +1,6 @@
 {
-    "name": "dolly",
-    "short_name": "dolly",
+    "name": "resume_builder",
+    "short_name": "resume_builder",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
